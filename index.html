@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>PRO CRICKET SCORER · live strike rate · run rate</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #0f212e;
+            background: radial-gradient(circle at 70% 30%, #1c3f4c, #0a1a24);
+            min-height: 100vh;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* professional dark theme with subtle accents */
+        .pro-scorer {
+            max-width: 1400px;
+            width: 100%;
+            background: #0f2832e0;
+            backdrop-filter: blur(12px);
+            border-radius: 42px;
+            box-shadow: 0 30px 50px #00000060, 0 0 0 2px #3e7a8c, 0 0 30px #2c5f6e;
+            padding: 24px;
+            border: 1px solid #5f9ea0;
+        }
+
+        /* header with live teams */
+        .header-pro {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            background: #143946;
+            padding: 18px 30px;
+            border-radius: 40px;
+            margin-bottom: 22px;
+            border-left: 6px solid #3cb371;
+            border-right: 6px solid #3cb371;
+            box-shadow: 0 8px 0 #0d2a33;
+        }
+
+        .team-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .team-group input {
+            background: #1d4b5a;
+            border: 2px solid #5f9ea0;
+            border-radius: 50px;
+            padding: 14px 28px;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #f0f9f0;
+            width: 240px;
+            letter-spacing: 0.5px;
+            transition: 0.2s;
+        }
+        .team-group input:focus {
+            border-color: #7fffd4;
+            outline: none;
+            box-shadow: 0 0 15px #3cb371;
+        }
+
+        .timer-pro {
+            background: #194e5c;
+            border-radius: 60px;
+            padding: 10px 30px;
+            border: 2px solid #6ab0b0;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .timer-pro span {
+            font-size: 2.4rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #d4f3f3;
+            text-shadow: 0 0 6px #7fffd4;
+        }
+        .timer-pro button {
+            background: #2b6f7a;
+            border: none;
+            border-radius: 40px;
+            padding: 8px 18px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #e2fdfd;
+            box-shadow: 0 4px 0 #12424b;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .timer-pro button:active { transform: translateY(3px); box-shadow: none; }
+
+        /* main grid */
+        .grid-pro {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 24px;
+        }
+
+        /* left panel - live action */
+        .live-pro {
+            background: #143946f2;
+            border-radius: 36px;
+            padding: 26px;
+            border: 2px solid #4f8a8f;
+            box-shadow: 0 0 25px #2f7a7a;
+        }
+
+        .score-block {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+        .runs-wkt {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+        .runs-big {
+            font-size: 6rem;
+            font-weight: 800;
+            color: #f5e56b;
+            line-height: 1;
+            text-shadow: 0 6px 0 #8f7730, 0 0 25px #ffd966;
+        }
+        .wickets-big {
+            font-size: 4rem;
+            font-weight: 600;
+            color: #ffaeae;
+            text-shadow: 0 0 15px #ff6969;
+        }
+        .overs-pro {
+            background: #216d77;
+            border-radius: 60px;
+            padding: 10px 30px;
+            border: 2px solid #7fffd4;
+        }
+        .overs-pro span {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #ecffd6;
+        }
+
+        /* rate meters */
+        .rate-panel {
+            display: flex;
+            justify-content: space-around;
+            background: #1e5c68;
+            border-radius: 50px;
+            padding: 18px;
+            margin: 20px 0;
+            border: 1px solid #7fffd4;
+        }
+        .rate-item {
+            text-align: center;
+        }
+        .rate-item .label {
+            color: #c2f0f0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .rate-item .value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #fad87a;
+            text-shadow: 0 0 10px #f0b34b;
+        }
+
+        /* partnership & milestones */
+        .partnership-pro {
+            background: #1b606d;
+            border-radius: 40px;
+            padding: 16px 22px;
+            margin: 20px 0;
+            border: 2px solid #6fbfbf;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .partnership-pro span {
+            font-size: 1.2rem;
+            color: #e4fcfc;
+        }
+        .milestone-pro {
+            background: #c7983c;
+            color: #0a2929;
+            font-weight: 800;
+            padding: 8px 22px;
+            border-radius: 40px;
+            font-size: 1.2rem;
+            box-shadow: 0 0 15px #f3c36b;
+        }
+
+        /* batsmen cards */
+        .batsmen-pro {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .batsman-pro {
+            background: #1e6875;
+            border-radius: 30px;
+            padding: 20px;
+            border: 2px solid #6fc2c2;
+            box-shadow: 0 5px 0 #0f4852;
+        }
+        .batsman-pro input {
+            background: #11515e;
+            border: 2px solid #7fffd4;
+            border-radius: 40px;
+            padding: 10px 18px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #f6ffe6;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .batsman-stats {
+            display: flex;
+            gap: 30px;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffeca2;
+            justify-content: center;
+        }
+        .badge-pro {
+            background: #308f8f;
+            color: #d6fcfc;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 6px;
+        }
+
+        /* bowler */
+        .bowler-pro {
+            background: #19646e;
+            border-radius: 30px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px solid #6fc2c2;
+        }
+        .bowler-row {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .bowler-row input {
+            background: #14707c;
+            border: 2px solid #9afff0;
+            border-radius: 40px;
+            padding: 12px 22px;
+            font-size: 1.4rem;
+            color: #f0fef0;
+            flex: 2;
+        }
+        .bowler-fig {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffde8a;
+            text-shadow: 0 0 8px #ffbb33;
+        }
+
+        /* run buttons */
+        .run-pad {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin: 25px 0;
+        }
+        .run-pad button {
+            background: #ecbc48;
+            border: none;
+            border-radius: 60px;
+            font-size: 2.4rem;
+            font-weight: 800;
+            padding: 20px 0;
+            box-shadow: 0 7px 0 #9f7629, 0 0 15px #f3b543;
+            cursor: pointer;
+            color: #0b3f1f;
+            transition: 0.08s;
+        }
+        .run-pad button:active { transform: translateY(5px); box-shadow: 0 2px 0 #9f7629; }
+        .wicket-btn {
+            background: #c9574b !important;
+            box-shadow: 0 7px 0 #863730, 0 0 15px #ff6969 !important;
+        }
+
+        .action-pro {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .action-pro button {
+            background: #2e7f8c;
+            border: none;
+            border-radius: 50px;
+            padding: 16px 22px;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #ecffec;
+            box-shadow: 0 5px 0 #154d57;
+            cursor: pointer;
+            flex: 1;
+            transition: 0.1s;
+        }
+
+        /* right squad panel */
+        .squad-pro {
+            background: #124654f2;
+            border-radius: 36px;
+            padding: 26px;
+            border: 2px solid #559696;
+            box-shadow: 0 0 25px #2f7a7a;
+        }
+        .squad-pro h2 {
+            color: #e7ffc7;
+            font-size: 2.2rem;
+            border-bottom: 4px solid #3cb371;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+        .add-pro {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .add-pro input {
+            background: #1d6373;
+            border: 2px solid #7fffd4;
+            border-radius: 50px;
+            padding: 16px 20px;
+            flex: 1;
+            color: #f5ffe1;
+            font-size: 1rem;
+        }
+        .add-pro button {
+            background: #eeb947;
+            border: none;
+            border-radius: 50px;
+            padding: 0 30px;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #103d3d;
+            box-shadow: 0 5px 0 #9f762b;
+            cursor: pointer;
+        }
+
+        .player-list-pro {
+            max-height: 450px;
+            overflow-y: auto;
+        }
+        .player-item-pro {
+            background: #1c6f80;
+            margin: 8px 0;
+            padding: 16px 20px;
+            border-radius: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #7fffd4;
+        }
+        .player-name-pro {
+            font-weight: 700;
+            color: #fcf5c6;
+            font-size: 1.2rem;
+        }
+        .player-stat-pro {
+            color: #ffeca2;
+            font-weight: 600;
+        }
+        .player-actions-pro button {
+            background: #f7c757;
+            border: none;
+            border-radius: 30px;
+            padding: 8px 14px;
+            margin: 0 4px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .footer-pro {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            color: #bef0f0;
+            font-size: 1.1rem;
+        }
+        @media (max-width: 900px) {
+            .grid-pro { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="pro-scorer" id="proScorerApp">
+    <!-- header with team names (editable) -->
+    <div class="header-pro">
+        <div class="team-group">
+            <input type="text" id="teamNameInput" value="ROYALS" placeholder="Team 1">
+            <span style="color:#7fffd4; font-size:2.2rem;">⚡</span>
+            <input type="text" id="opponentInput" value="TITANS" placeholder="Team 2">
+        </div>
+        <div class="timer-pro">
+            <span id="timerDisplay">00:00</span>
+            <button id="timerStart">▶</button>
+            <button id="timerPause">⏸️</button>
+            <button id="timerReset">⟲</button>
+        </div>
+    </div>
+
+    <!-- main grid -->
+    <div class="grid-pro">
+        <!-- left panel - all live calculations -->
+        <div class="live-pro">
+            <div class="score-block">
+                <div class="runs-wkt">
+                    <span class="runs-big" id="totalRuns">134</span>
+                    <span class="wickets-big" id="totalWickets">/3</span>
+                </div>
+                <div class="overs-pro">
+                    <span id="oversDisplay">16.2</span>
+                </div>
+            </div>
+
+            <!-- dynamic rate panel -->
+            <div class="rate-panel">
+                <div class="rate-item"><span class="label">RUN RATE</span><span class="value" id="runRate">7.85</span></div>
+                <div class="rate-item"><span class="label">REQ RATE</span><span class="value" id="reqRate">8.42</span></div>
+                <div class="rate-item"><span class="label">PARTNERSHIP</span><span class="value" id="partnershipValue">47</span></div>
+            </div>
+
+            <!-- live partnership & milestone -->
+            <div class="partnership-pro">
+                <span>🤝 <span id="partnershipRuns">47</span> runs (<span id="partnershipBalls">34</span> balls)</span>
+                <span class="milestone-pro" id="milestoneDisplay">⚡</span>
+            </div>
+
+            <!-- batsmen cards (fully dynamic) -->
+            <div class="batsmen-pro" id="batsmenContainer"></div>
+
+            <!-- bowler card -->
+            <div class="bowler-pro">
+                <div style="display: flex; justify-content: space-between; color: #bef0e0; margin-bottom: 8px;">
+                    <span>🎯 BOWLER</span>
+                    <span id="bowlerEcon">econ 6.20</span>
+                </div>
+                <div class="bowler-row">
+                    <input type="text" id="bowlerNameInput" value="BOULT">
+                    <span class="bowler-fig" id="bowlerFigures">4-0-31-2</span>
+                </div>
+            </div>
+
+            <!-- run buttons -->
+            <div class="run-pad">
+                <button class="run-btn" data-run="0">0</button>
+                <button class="run-btn" data-run="1">1</button>
+                <button class="run-btn" data-run="2">2</button>
+                <button class="run-btn" data-run="3">3</button>
+                <button class="run-btn" data-run="4">4</button>
+                <button class="run-btn" data-run="5">5</button>
+                <button class="run-btn" data-run="6">6</button>
+                <button class="run-btn wicket-btn" data-run="W">W</button>
+                <button class="run-btn" data-run="WD">WD</button>
+                <button class="run-btn" data-run="NB">NB</button>
+            </div>
+
+            <!-- action buttons -->
+            <div class="action-pro">
+                <button id="changeStrikeBtn">🔄 CHANGE STRIKE</button>
+                <button id="nextBowlerBtn">⏩ NEXT BOWLER</button>
+                <button id="resetMatchBtn">⟲ RESET MATCH</button>
+            </div>
+        </div>
+
+        <!-- right squad panel (10 players) -->
+        <div class="squad-pro">
+            <h2>🧾 SQUAD (10)</h2>
+            <div class="add-pro">
+                <input type="text" id="newPlayerName" placeholder="Enter player name">
+                <button id="addPlayerBtn">➕</button>
+            </div>
+            <div class="player-list-pro" id="playerList"></div>
+            <div class="footer-pro">
+                <span>last ball: <span id="lastBall">4</span></span>
+                <span>striker SR: <span id="strikerSR">157.1</span></span>
+                <span>⚡ pro mode</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- PROFESSIONAL STATE (ALL CALCULATED LIVE) ----------
+        let match = {
+            team: "ROYALS",
+            opponent: "TITANS",
+            runs: 134,
+            wickets: 3,
+            overs: 16,
+            balls: 2,
+            totalOvers: 20,
+            target: 180
+        };
+
+        // 10 players with initial stats
+        let batsmen = [
+            { name: "SHARMA", runs: 58, balls: 41, striker: true, active: true },
+            { name: "KOHLI", runs: 42, balls: 33, striker: false, active: true },
+            { name: "RAHUL", runs: 12, balls: 14, striker: false, active: false },
+            { name: "PANDEY", runs: 0, balls: 0, striker: false, active: false },
+            { name: "JADEJA", runs: 0, balls: 0, striker: false, active: false },
+            { name: "BUMRAH", runs: 0, balls: 0, striker: false, active: false },
+            { name: "SHAMI", runs: 0, balls: 0, striker: false, active: false },
+            { name: "CHAHAL", runs: 0, balls: 0, striker: false, active: false },
+            { name: "SIRAJ", runs: 0, balls: 0, striker: false, active: false },
+            { name: "HARDIK", runs: 0, balls: 0, striker: false, active: false }
+        ];
+
+        let bowler = {
+            name: "BOULT",
+            overs: 4,
+            balls: 0,
+            runs: 31,
+            wickets: 2
+        };
+
+        let lastBall = '4';
+        let timerSeconds = 0, timerInterval = null, timerRunning = false;
+
+        // helpers
+        function getStriker() { return batsmen.find(b => b.striker && b.active) || batsmen[0]; }
+        function getNonStriker() { return batsmen.find(b => !b.striker && b.active) || batsmen[1]; }
+
+        // ---------- ALL CALCULATIONS LIVE ----------
+        function calculateRunRate() {
+            let totalBalls = match.overs * 6 + match.balls;
+            return totalBalls > 0 ? (match.runs / totalBalls * 6).toFixed(2) : '0.00';
+        }
+
+        function calculateReqRate() {
+            let remainingBalls = (match.totalOvers * 6) - (match.overs * 6 + match.balls);
+            let reqRuns = match.target - match.runs;
+            if (remainingBalls <= 0 || reqRuns <= 0) return '—';
+            return (reqRuns / remainingBalls * 6).toFixed(2);
+        }
+
+        function calculatePartnership() {
+            let striker = getStriker();
+            let non = getNonStriker();
+            if (striker && non) {
+                return { runs: striker.runs + non.runs, balls: striker.balls + non.balls };
+            }
+            return { runs: 0, balls: 0 };
+        }
+
+        function calculateStrikeRate(player) {
+            if (!player || player.balls === 0) return '0.00';
+            return ((player.runs / player.balls) * 100).toFixed(1);
+        }
+
+        function calculateBowlerEcon() {
+            let totalBalls = bowler.overs * 6 + bowler.balls;
+            return totalBalls > 0 ? (bowler.runs / totalBalls * 6).toFixed(2) : '0.00';
+        }
+
+        function checkMilestone(partnership, striker, nonStriker) {
+            if (partnership.runs >= 50 && partnership.runs < 55) return "🎯 50 PARTNERSHIP";
+            if (striker && striker.runs >= 50 && striker.runs < 55) return `🔥 ${striker.name} FIFTY`;
+            if (nonStriker && nonStriker.runs >= 50 && nonStriker.runs < 55) return `🔥 ${nonStriker.name} FIFTY`;
+            return "⚡";
+        }
+
+        // main UI update (all values computed live)
+        function updateUI() {
+            // core match
+            document.getElementById('totalRuns').innerText = match.runs;
+            document.getElementById('totalWickets').innerText = '/' + match.wickets;
+            document.getElementById('oversDisplay').innerText = match.overs + '.' + match.balls;
+
+            // rates
+            document.getElementById('runRate').innerText = calculateRunRate();
+            document.getElementById('reqRate').innerText = calculateReqRate();
+
+            let partnership = calculatePartnership();
+            document.getElementById('partnershipRuns').innerText = partnership.runs;
+            document.getElementById('partnershipBalls').innerText = partnership.balls;
+            document.getElementById('partnershipValue').innerText = partnership.runs;
+
+            // batsman cards
+            let striker = getStriker();
+            let nonStriker = getNonStriker();
+
+            let batsHtml = `
+                <div class="batsman-pro">
+                    <input type="text" class="strikerName" value="${striker ? striker.name : ''}">
+                    <div class="batsman-stats">
+                        <span>${striker ? striker.runs : 0}</span>
+                        <span>${striker ? striker.balls : 0} B</span>
+                        <span>${calculateStrikeRate(striker)} SR</span>
+                    </div>
+                    <span class="badge-pro">🔱 STRIKER</span>
+                </div>
+                <div class="batsman-pro">
+                    <input type="text" class="nonStrikerName" value="${nonStriker ? nonStriker.name : ''}">
+                    <div class="batsman-stats">
+                        <span>${nonStriker ? nonStriker.runs : 0}</span>
+                        <span>${nonStriker ? nonStriker.balls : 0} B</span>
+                        <span>${calculateStrikeRate(nonStriker)} SR</span>
+                    </div>
+                    <span class="badge-pro">🔄 NON STRIKER</span>
+                </div>
+            `;
+            document.getElementById('batsmenContainer').innerHTML = batsHtml;
+
+            // attach input events for names
+            let strikerInput = document.querySelector('.strikerName');
+            if (strikerInput) {
+                strikerInput.addEventListener('input', (e) => {
+                    if (striker) striker.name = e.target.value.toUpperCase();
+                    updateUI();
+                });
+            }
+            let nonInput = document.querySelector('.nonStrikerName');
+            if (nonInput) {
+                nonInput.addEventListener('input', (e) => {
+                    if (nonStriker) nonStriker.name = e.target.value.toUpperCase();
+                    updateUI();
+                });
+            }
+
+            // milestone
+            document.getElementById('milestoneDisplay').innerText = checkMilestone(partnership, striker, nonStriker);
+
+            // bowler
+            document.getElementById('bowlerNameInput').value = bowler.name;
+            document.getElementById('bowlerFigures').innerText = `${bowler.overs}.${bowler.balls}-${bowler.runs}-${bowler.wickets}`;
+            document.getElementById('bowlerEcon').innerText = `econ ${calculateBowlerEcon()}`;
+
+            // player list (10)
+            let listHtml = '';
+            batsmen.forEach((p, idx) => {
+                listHtml += `
+                    <div class="player-item-pro">
+                        <span class="player-name-pro">${p.name}</span>
+                        <span class="player-stat-pro">${p.runs}/${p.balls} (${calculateStrikeRate(p)} SR)</span>
+                        <div class="player-actions-pro">
+                            <button class="setStrikerBtn" data-index="${idx}">🔱 ST</button>
+                            <button class="setActiveBtn" data-index="${idx}">✅ IN</button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('playerList').innerHTML = listHtml;
+
+            // player action listeners
+            document.querySelectorAll('.setStrikerBtn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    let idx = e.target.getAttribute('data-index');
+                    batsmen.forEach((b, i) => { b.striker = (i == idx); });
+                    updateUI();
+                });
+            });
+            document.querySelectorAll('.setActiveBtn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    let idx = e.target.getAttribute('data-index');
+                    batsmen[idx].active = true;
+                    updateUI();
+                });
+            });
+
+            // footer
+            document.getElementById('lastBall').innerText = lastBall;
+            if (striker) {
+                document.getElementById('strikerSR').innerText = calculateStrikeRate(striker);
+            }
+        }
+
+        // add run (all calculations update)
+        function addRun(run, isWide = false, isNoBall = false) {
+            let striker = getStriker();
+
+            if (run === 'W') {
+                match.wickets += 1;
+                if (striker) striker.active = false;
+                let next = batsmen.find(b => !b.active);
+                if (next) next.active = true;
+                bowler.wickets += 1;
+                lastBall = 'W';
+                match.balls += 1;
+                bowler.balls += 1;
+            } else {
+                let r = parseInt(run);
+                if (!isNaN(r)) {
+                    match.runs += r;
+                    if (striker) {
+                        striker.runs += r;
+                        striker.balls += 1;
+                    }
+                    bowler.runs += r;
+                    lastBall = r.toString();
+                    match.balls += 1;
+                    bowler.balls += 1;
+                }
+            }
+
+            if (isWide) { match.runs += 1; lastBall = 'WD'; }
+            if (isNoBall) { match.runs += 1; lastBall = 'NB'; }
+
+            if (match.balls >= 6) {
+                match.overs += 1;
+                match.balls = 0;
+                bowler.overs += 1;
+                bowler.balls = 0;
+            }
+            if (match.wickets >= 10) { /* innings break */ }
+
+            updateUI();
+        }
+
+        function swapStrike() {
+            let striker = getStriker();
+            let non = getNonStriker();
+            if (striker && non) {
+                striker.striker = false;
+                non.striker = true;
+            }
+            updateUI();
+        }
+
+        // timer
+        function startTimer() {
+            if (timerRunning) return;
+            timerRunning = true;
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                let mins = Math.floor(timerSeconds / 60);
+                let secs = timerSeconds % 60;
+                document.getElementById('timerDisplay').innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+            }, 1000);
+        }
+        function pauseTimer() { clearInterval(timerInterval); timerRunning = false; }
+        function resetTimer() { pauseTimer(); timerSeconds = 0; document.getElementById('timerDisplay').innerText = '00:00'; }
+
+        // listeners
+        document.querySelectorAll('.run-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                let run = e.target.getAttribute('data-run');
+                if (run === 'WD') addRun('1', true);
+                else if (run === 'NB') addRun('1', false, true);
+                else addRun(run);
+            });
+        });
+
+        document.getElementById('changeStrikeBtn').addEventListener('click', swapStrike);
+        document.getElementById('nextBowlerBtn').addEventListener('click', () => {
+            bowler.name = prompt("Enter bowler name", bowler.name) || bowler.name;
+            updateUI();
+        });
+        document.getElementById('resetMatchBtn').addEventListener('click', () => {
+            match.runs = 0; match.wickets = 0; match.overs = 0; match.balls = 0;
+            batsmen.forEach((b, i) => {
+                b.runs = 0; b.balls = 0; b.active = (i < 2); b.striker = (i === 0);
+            });
+            bowler.overs = 0; bowler.balls = 0; bowler.runs = 0; bowler.wickets = 0;
+            lastBall = '0';
+            updateUI();
+        });
+
+        document.getElementById('addPlayerBtn').addEventListener('click', () => {
+            let newName = document.getElementById('newPlayerName').value.trim().toUpperCase();
+            if (newName && batsmen.length < 10) {
+                batsmen.push({ name: newName, runs: 0, balls: 0, striker: false, active: false });
+                document.getElementById('newPlayerName').value = '';
+                updateUI();
+            } else alert('Max 10 players or enter name');
+        });
+
+        // timer
+        document.getElementById('timerStart').addEventListener('click', startTimer);
+        document.getElementById('timerPause').addEventListener('click', pauseTimer);
+        document.getElementById('timerReset').addEventListener('click', resetTimer);
+
+        // team name inputs (just updates state)
+        document.getElementById('teamNameInput').addEventListener('input', e => match.team = e.target.value);
+        document.getElementById('opponentInput').addEventListener('input', e => match.opponent = e.target.value);
+        document.getElementById('bowlerNameInput').addEventListener('input', e => bowler.name = e.target.value.toUpperCase());
+
+        updateUI();
+    })();
+</script>
+</body>
+</html>
